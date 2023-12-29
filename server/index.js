@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
+const { secp256k1: secp } = require("ethereum-cryptography/secp256k1");
 const port = 3042;
 
 app.use(cors());
@@ -19,7 +20,18 @@ app.get("/balance/:address", (req, res) => {
 });
 
 app.post("/send", (req, res) => {
-  const { sender, recipient, amount } = req.body;
+  const { sender, recipient, amount, signature, publicKey, messageHash } = req.body;
+
+  // restore biging in signature
+  signature.r = BigInt(signature.r);
+  signature.s = BigInt(signature.s);
+
+  const isSigned = secp.verify(signature, messageHash, publicKey);
+
+  if (!isSigned) {
+    res.status(400).send({ message: "Message is not signed!" });
+    return;
+  }
 
   setInitialBalance(sender);
   setInitialBalance(recipient);
