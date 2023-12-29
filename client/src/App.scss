@@ -84,3 +84,17 @@ input {
   display: flex;
   flex-direction: column;
 }
+
+.keys {
+    margin: 0 20px;
+
+    opacity: .3;
+}
+
+.key {
+    margin-top: 15px;
+}
+
+.key-title {
+    font-weight: 700;
+}
