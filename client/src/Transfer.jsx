@@ -3,14 +3,14 @@ import { sha256 } from "ethereum-cryptography/sha256";
 import { utf8ToBytes, toHex } from "ethereum-cryptography/utils";
 import { secp256k1 as secp } from "ethereum-cryptography/secp256k1";
 import server from "./server";
+import { getAddress } from '../../shared/getAddress';
 
 // monkeypatch prototype for sending signature to server
 BigInt.prototype.toJSON = function() { return this.toString() }
 
-function Transfer({ address, setBalance }) {
+function Transfer({ privateKey, setBalance }) {
   const [sendAmount, setSendAmount] = useState("");
   const [recipient, setRecipient] = useState("");
-  const [privateKey, setPrivateKey] = useState("");
 
   const setValue = (setter) => (evt) => setter(evt.target.value);
 
@@ -26,6 +26,8 @@ function Transfer({ address, setBalance }) {
       return;
     }
 
+    const address = getAddress(publicKey);
+
     const transaction = {
       sender: address,
       amount: parseInt(sendAmount),
@@ -35,6 +37,7 @@ function Transfer({ address, setBalance }) {
 
     const messageHash = sha256(utf8ToBytes(JSON.stringify(transaction)));
     const signature = secp.sign(messageHash, privateKey);
+    transaction.messageHash = toHex(messageHash);
     transaction.signature = signature;
 
     try {
@@ -50,18 +53,9 @@ function Transfer({ address, setBalance }) {
       <h1>Send Transaction</h1>
 
       <label>
-        Private Key
-        <input
-          placeholder="e41868a1ca56..."
-          value={privateKey}
-          onChange={setValue(setPrivateKey)}
-        ></input>
-      </label>
-
-      <label>
         Send Amount
         <input
-          placeholder="1, 2, 3..."
+          placeholder="10"
           value={sendAmount}
           onChange={setValue(setSendAmount)}
         ></input>
